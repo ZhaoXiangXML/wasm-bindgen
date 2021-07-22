@@ -1211,11 +1211,6 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
             .iter()
             .enumerate()
             .map(|(i, v)| {
-                match v.fields {
-                    syn::Fields::Unit => (),
-                    _ => bail_span!(v.fields, "only C-Style enums allowed with #[wasm_bindgen]"),
-                }
-
                 // Require that everything either has a discriminant or doesn't.
                 // We don't really want to get in the business of emulating how
                 // rustc assigns values to enums.
@@ -1255,6 +1250,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
                     name: v.ident.clone(),
                     value,
                     comments,
+                    fields: v.fields.clone(),
                 })
             })
             .collect::<Result<Vec<_>, Diagnostic>>()?;
