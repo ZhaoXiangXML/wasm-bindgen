@@ -173,11 +173,7 @@ impl InstructionBuilder<'_, '_> {
                 let free = self.cx.free()?;
                 self.instruction(
                     &[AdapterType::I32, AdapterType::I32],
-                    Instruction::VectorLoad {
-                        kind,
-                        mem,
-                        free,
-                    },
+                    Instruction::VectorLoad { kind, mem, free },
                     &[AdapterType::Enum],
                 );
             }

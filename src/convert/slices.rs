@@ -376,9 +376,6 @@ impl VectorEncoding for WasmSlice {
     fn pop_from_u32_vector(vector: &mut Vec<u32>) -> Self {
         let ptr = vector.pop().unwrap();
         let len = vector.pop().unwrap();
-        WasmSlice {
-            ptr,
-            len
-        }
+        WasmSlice { ptr, len }
     }
 }

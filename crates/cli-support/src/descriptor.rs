@@ -110,7 +110,7 @@ pub enum VectorKind {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EnumVariant {
     pub name: String,
-    pub fields: Vec<Descriptor>
+    pub fields: Vec<Descriptor>,
 }
 
 impl Descriptor {

@@ -93,7 +93,7 @@ pub enum AdapterType {
 #[derive(Debug, Clone)]
 pub struct EnumVariantAdapter {
     pub name: String,
-    pub fields: Vec<AdapterType>
+    pub fields: Vec<AdapterType>,
 }
 
 #[derive(Debug, Clone)]

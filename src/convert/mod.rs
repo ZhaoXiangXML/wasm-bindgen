@@ -7,5 +7,5 @@ mod slices;
 mod traits;
 
 pub use self::impls::*;
-pub use self::slices::{WasmSlice, VectorEncoding};
+pub use self::slices::{VectorEncoding, WasmSlice};
 pub use self::traits::*;
