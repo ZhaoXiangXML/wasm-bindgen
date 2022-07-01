@@ -1213,16 +1213,23 @@ impl ToTokens for ast::Enum {
             let fields = &variant.fields.clone();
             let variant_fields_into_array = fields.iter().map(|field| {
                 quote! {
-                    #field::from_abi(<#field as FromWasmAbi>::Abi::pop_from_u32_vector(&mut vector))
+                    #field::from_abi(<<#field as wasm_bindgen::convert::FromWasmAbi>::Abi as wasm_bindgen::convert::VectorEncoding>::pop_from_u32_vector(&mut vector))
                 }
             });
 
+            let variant_field_names = if let syn::Fields::Unit = fields {
+                quote! {}
+            } else {
+                quote! {(#(#variant_fields_into_array),*)}
+            };
+
             quote! {
                 if vector.pop().unwrap() == #variant_value {
-                    #enum_name::#variant_name(#(#variant_fields_into_array),*)
+                    #enum_name::#variant_name #variant_field_names
                 }
             }
         });
+
         let into_clauses = self.variants.iter().map(|variant| {
             let variant_name = &variant.name;
             let variant_value = &variant.value;
@@ -1237,23 +1244,30 @@ impl ToTokens for ast::Enum {
 
             let field_names = field_vector_into_tuple.clone();
 
+            let variant_field_names = if let syn::Fields::Unit = fields {
+                quote! {}
+            } else {
+                quote! {(#(#field_vector_into_tuple),*)}
+            };
+
             quote! {
-                #enum_name::#variant_name(#(#field_vector_into_tuple),*)
+                #enum_name::#variant_name #variant_field_names
                     => {
+                        #[allow(unused_mut)]
                         let mut vector = vec![(#variant_value).into_abi()];
+                        #[allow(unused_imports)]
+                        use wasm_bindgen::convert::VectorEncoding;
                         #((#field_names).into_abi().push_into_u32_vector(&mut vector));*;
                         vector
                     }
             }
         });
         (quote! {
-            use wasm_bindgen::convert::{WasmAbi, WasmSlice, FromWasmAbi, VectorEncoding};
-
             #[automatically_derived]
             impl wasm_bindgen::convert::IntoWasmAbi for #enum_name {
-                type Abi = WasmSlice;
+                type Abi = wasm_bindgen::convert::WasmSlice;
 
-                fn into_abi(self) -> WasmSlice {
+                fn into_abi(self) -> wasm_bindgen::convert::WasmSlice {
                     let vector = match self {
                         #(#into_clauses),*
                     };
@@ -1261,7 +1275,7 @@ impl ToTokens for ast::Enum {
                     let ptr = vector.as_ptr();
                     let len = vector.len();
                     core::mem::forget(vector);
-                    WasmSlice {
+                    wasm_bindgen::convert::WasmSlice {
                         ptr: ptr.into_abi(),
                         len: len as u32,
                     }
@@ -1270,17 +1284,16 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl wasm_bindgen::convert::FromWasmAbi for #enum_name {
-                type Abi = WasmSlice;
+                type Abi = wasm_bindgen::convert::WasmSlice;
 
                 #[inline]
-                unsafe fn from_abi(js: WasmSlice) -> Self {
+                unsafe fn from_abi(js: wasm_bindgen::convert::WasmSlice) -> Self {
                     let ptr = <*mut u32>::from_abi(js.ptr);
                     let len = js.len as usize;
                     let mut vector = Vec::from_raw_parts(ptr, len, len);
-                    let err = format!("{:?}", vector.len()).as_str();
 
                     #(#cast_clauses else)* {
-                        wasm_bindgen::throw_str(err,)
+                        wasm_bindgen::throw_str(format!("{:?}", vector.len()).as_str())
                     }
                 }
             }
@@ -1288,7 +1301,7 @@ impl ToTokens for ast::Enum {
             #[automatically_derived]
             impl wasm_bindgen::convert::OptionFromWasmAbi for #enum_name {
                 #[inline]
-                fn is_none(val: &WasmSlice) -> bool {
+                fn is_none(val: &wasm_bindgen::convert::WasmSlice) -> bool {
                     val.ptr == (#hole as u32)
                 }
             }
@@ -1296,7 +1309,7 @@ impl ToTokens for ast::Enum {
             #[automatically_derived]
             impl wasm_bindgen::convert::OptionIntoWasmAbi for #enum_name {
                 #[inline]
-                fn none() -> Self::Abi { WasmSlice { ptr: 0, len: 0 } }
+                fn none() -> Self::Abi { wasm_bindgen::convert::WasmSlice { ptr: 0, len: 0 } }
             }
 
             #[automatically_derived]
