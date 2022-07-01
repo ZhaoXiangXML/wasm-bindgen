@@ -87,6 +87,13 @@ pub enum AdapterType {
     Struct(String),
     NamedExternref(String),
     Function,
+    Enum,
+}
+
+#[derive(Debug, Clone)]
+pub struct EnumVariantAdapter {
+    pub name: String,
+    pub fields: Vec<AdapterType>,
 }
 
 #[derive(Debug, Clone)]
@@ -372,7 +379,8 @@ impl AdapterType {
             | AdapterType::Function
             | AdapterType::Struct(_)
             | AdapterType::Bool
-            | AdapterType::Vector(_) => return None,
+            | AdapterType::Vector(_)
+            | AdapterType::Enum => return None,
         })
     }
 
